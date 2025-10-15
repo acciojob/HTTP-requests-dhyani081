@@ -6,18 +6,17 @@ const { URL } = require('url');
 
 const urls = process.argv.slice(2);
 
-// If no URLs are provided
+// Case 1: No URLs provided
 if (urls.length === 0) {
   console.error('Error: No URLs provided');
   process.exit(1);
 }
 
-// Function to download a single URL
-function download(url) {
+urls.forEach((url) => {
   try {
     const parsedUrl = new URL(url);
     const protocol = parsedUrl.protocol === 'https:' ? https : http;
-    const filename = parsedUrl.hostname;
+    const filename = parsedUrl.hostname + '.txt'; // must save as .txt
 
     protocol.get(url, (res) => {
       if (res.statusCode !== 200) {
@@ -26,20 +25,17 @@ function download(url) {
         return;
       }
 
-      const fileStream = fs.createWriteStream(filename);
-      res.pipe(fileStream);
+      const file = fs.createWriteStream(filename);
+      res.pipe(file);
 
-      fileStream.on('finish', () => {
-        fileStream.close();
+      file.on('finish', () => {
+        file.close();
         console.log(`Downloaded and saved: ${filename}`);
       });
     }).on('error', () => {
       console.error(`Error: Failed to download ${url}`);
     });
-  } catch {
+  } catch (err) {
     console.error(`Error: Invalid URL ${url}`);
   }
-}
-
-// Process all URLs
-urls.forEach(download);
+});
