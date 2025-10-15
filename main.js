@@ -4,28 +4,25 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
-// Get URLs from command-line arguments
 const urls = process.argv.slice(2);
 
+// ✅ Handle no URLs case
 if (urls.length === 0) {
-  console.error('Error: No URLs provided.');
-  console.error('Usage: node download.js <url1> <url2> ...');
+  console.error('Error: No URLs provided');
   process.exit(1);
 }
 
-// Function to download content
+// ✅ Function to download a single URL
 function download(url) {
   try {
     const parsedUrl = new URL(url);
     const protocol = parsedUrl.protocol === 'https:' ? https : http;
     const filename = parsedUrl.hostname;
 
-    console.log(`Downloading from: ${url}`);
-
     protocol.get(url, (res) => {
       if (res.statusCode !== 200) {
-        console.error(`Failed to download ${url}. Status Code: ${res.statusCode}`);
-        res.resume(); // consume response to free up memory
+        console.error(`Error: Failed to download ${url} (Status Code: ${res.statusCode})`);
+        res.resume();
         return;
       }
 
@@ -34,20 +31,19 @@ function download(url) {
       res.on('end', () => {
         fs.writeFile(filename, data, (err) => {
           if (err) {
-            console.error(`Error writing file ${filename}: ${err.message}`);
+            console.error(`Error: Unable to write file ${filename}`);
           } else {
-            console.log(`✅ Saved ${url} as ${filename}`);
+            console.log(`Downloaded and saved: ${filename}`);
           }
         });
       });
     }).on('error', (err) => {
-      console.error(`Error downloading ${url}: ${err.message}`);
+      console.error(`Error: Failed to download ${url} (${err.message})`);
     });
-
-  } catch (error) {
-    console.error(`Invalid URL: ${url}`);
+  } catch (err) {
+    console.error(`Error: Invalid URL ${url}`);
   }
 }
 
-// Download all URLs
+// ✅ Loop through URLs
 urls.forEach(download);
